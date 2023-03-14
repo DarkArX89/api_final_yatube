@@ -1,9 +1,7 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from django.shortcuts import get_object_or_404
-
-from posts.models import Comment, Post, Group, Follow, User
+from posts.models import Comment, Post, Group, Follow
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -52,13 +50,13 @@ class FollowSerializer(serializers.ModelSerializer):
                 'В запросе некорректные данные!'
             )
         user = self.context['request'].user
-        following = get_object_or_404(User, username=following_name)
-        if user == following:
+        if user.username == following_name:
             raise serializers.ValidationError(
                 'Нельзя подписываться на самого себя!'
             )
-        unique = Follow.objects.filter(user=user, following=following)
-        if len(unique) > 0:
+        if Follow.objects.filter(
+            user=user, following__username=following_name
+        ).exists():
             raise serializers.ValidationError(
                 'Подписка пользователя на этого автора уже существует!'
             )
